@@ -483,8 +483,8 @@ router.get("/downloadTemplate", async (req, res) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: "Server error" });
+    console.error("Template download error:", e);
+    res.status(500).json({ message: "Server error", error: e.message });
   }
 });
 

@@ -25,7 +25,8 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
         const wb = XLSX.read(bstr, { type: 'binary' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws);
+        // range: 1 skips the first row (Title row) so headers are read from the second row
+        const data = XLSX.utils.sheet_to_json(ws, { range: 1 });
         
         console.log('Parsed Data:', data);
         
@@ -42,11 +43,15 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
             try {
+                // Determine email with fallback and trim whitespace
+                const rawEmail = row['Email'] || row['email'] || '';
+                const email = String(rawEmail).trim();
+
                 // Minimal normalization
                 const payload = {
                     mainAuthor: row['Main Author'] || row['mainAuthor'] || '',
                     title: row['Title'] || row['title'] || '',
-                    email: row['Email'] || row['email'] || '',
+                    email: email,
                     phone: row['Phone'] || row['phone'] || '',
                     dept: row['Dept'] || row['dept'] || '',
                     coauthors: row['Co-Authors'] || row['coauthors'] || '',
@@ -60,12 +65,17 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
                     pdfUrl: row['PDF URL'] || row['pdfUrl'] || ''
                 };
 
+                if (!payload.email || !payload.email.toLowerCase().endsWith('@nriit.edu.in')) {
+                    console.error(`Email validation failed for: ${payload.email}`);
+                    throw new Error(`Invalid email domain: ${payload.email}. Only @nriit.edu.in is allowed.`);
+                }
+
                 await api.post('/form/formEntry', payload);
                 successCount++;
             } catch (err) {
                 console.error(`Row ${i + 1} failed`, err);
                 failCount++;
-                newErrors.push(`Row ${i + 2}: ${err.response?.data?.message || 'Upload failed'}`);
+                newErrors.push(`Row ${i + 2}: ${err.response?.data?.message || err.message || 'Upload failed'}`);
             }
             
             setStats({ total: data.length, success: successCount, failed: failCount });
