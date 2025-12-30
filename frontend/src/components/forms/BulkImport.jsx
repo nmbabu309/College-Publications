@@ -54,7 +54,7 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
                     email: email,
                     phone: row['Phone'] || row['phone'] || '',
                     dept: row['Dept'] || row['dept'] || '',
-                    coauthors: row['Co-Authors'] || row['coauthors'] || '',
+                    coauthors: row['Co-Authors'] || row['Coauthors'] || row['coauthors'] || '',
                     journal: row['Journal'] || row['journal'] || '',
                     publisher: row['Publisher'] || row['publisher'] || '',
                     year: row['Year'] || row['year'] || '',
@@ -62,6 +62,10 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
                     issueNo: row['Issue No'] || row['issueNo'] || '',
                     pages: row['Pages'] || row['pages'] || '',
                     indexation: row['Indexation'] || row['indexation'] || '',
+                    issnNo: row['ISSN No'] || row['issnNo'] || '',
+                    journalLink: row['Journal Link'] || row['journalLink'] || '',
+                    ugcApproved: row['UGC Approved'] || row['ugcApproved'] || '',
+                    impactFactor: row['Impact Factor'] || row['impactFactor'] || '',
                     pdfUrl: row['PDF URL'] || row['pdfUrl'] || ''
                 };
 

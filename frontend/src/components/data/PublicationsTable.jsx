@@ -6,6 +6,9 @@ import {
   AlertCircle,
   Edit,
   FileText,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../api/axios";
@@ -24,6 +27,7 @@ const PublicationsTable = ({ showActions = false }) => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   // Deletion state
   const [deleteId, setDeleteId] = useState(null);
@@ -85,9 +89,19 @@ const PublicationsTable = ({ showActions = false }) => {
     setEditItem(null);
   };
 
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+    setCurrentPage(1); // Reset to first page on sort change
+  };
+
   const columns = [
     { key: "mainAuthor", label: "Main Author", minWidth: "180px" },
     { key: "title", label: "Title", minWidth: "250px" },
+    { key: "email", label: "Email", minWidth: "150px" },
     { key: "dept", label: "Dept", minWidth: "100px" },
     { key: "coauthors", label: "Co-Authors", minWidth: "200px" },
     { key: "journal", label: "Journal", minWidth: "200px" },
@@ -122,11 +136,30 @@ const PublicationsTable = ({ showActions = false }) => {
     });
   }, [data, filters]);
 
+  const sortedData = useMemo(() => {
+    let sortableItems = [...filteredData];
+    if (sortConfig.key !== null) {
+      sortableItems.sort((a, b) => {
+        const valA = a[sortConfig.key] ? String(a[sortConfig.key]).toLowerCase() : '';
+        const valB = b[sortConfig.key] ? String(b[sortConfig.key]).toLowerCase() : '';
+
+        if (valA < valB) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (valA > valB) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [filteredData, sortConfig]);
+
   // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentItems = sortedData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -157,11 +190,21 @@ const PublicationsTable = ({ showActions = false }) => {
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className="p-3 align-top bg-slate-50"
+                    className="p-3 align-top bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors group select-none"
                     style={{ minWidth: col.minWidth }}
+                    onClick={() => requestSort(col.key)}
                   >
-                    <div className="mb-2">{col.label}</div>
-                    <div className="relative">
+                    <div className="flex items-center gap-1 mb-2">
+                      {col.label}
+                      <span className="text-slate-400">
+                        {sortConfig.key === col.key ? (
+                          sortConfig.direction === 'asc' ? <ArrowUp size={14} className="text-primary" /> : <ArrowDown size={14} className="text-primary" />
+                        ) : (
+                          <ArrowUpDown size={14} className="opacity-0 group-hover:opacity-50 transition-opacity" />
+                        )}
+                      </span>
+                    </div>
+                    <div className="relative" onClick={(e) => e.stopPropagation()}>
                       <Search
                         className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
                         size={12}
