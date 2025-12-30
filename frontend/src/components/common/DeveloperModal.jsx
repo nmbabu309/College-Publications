@@ -1,10 +1,18 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Code, Mail } from 'lucide-react';
+import { X, Code, Mail, User } from 'lucide-react';
 
 const DeveloperModal = ({ isOpen, onClose }) => {
+  const developers = [
+    { name: 'Amman', email: 'ammanfawaz272@gmail.com' },
+    { name: 'Mukesh', email: 'mukesh@example.com' },
+    { name: 'Rahul', email: 'rahul@example.com' },
+    { name: 'Shyam', email: 'shyam@example.com' },
+    { name: 'Varma', email: 'varma@example.com' },
+  ];
+
   return (
     <AnimatePresence>
-      {/* {isOpen && (
+      {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
@@ -18,7 +26,7 @@ const DeveloperModal = ({ isOpen, onClose }) => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="relative bg-white rounded-2xl shadow-premium p-8 max-w-sm w-full text-center overflow-hidden"
+            className="relative bg-white rounded-2xl shadow-premium p-8 max-w-4xl w-full text-center overflow-hidden"
           >
              <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-primary to-secondary opacity-10" />
              
@@ -28,21 +36,24 @@ const DeveloperModal = ({ isOpen, onClose }) => {
                 </div>
                 
                 <h3 className="text-xl font-bold font-heading text-slate-900 mb-2">Designed & Developed by</h3>
-                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-6">
-                    Amman
-                </h2>
-                
                 <p className="text-slate-500 text-sm mb-8">
-                    Built with React, Tailwind CSS, Express & SQLite for seamless publication management.
+                    Department of Computer Science & Engineering CSE-B Batch of 2023
                 </p>
 
-                <a 
-                   href="mailto:ammanfawaz272@gmail.com"
-                   className="flex items-center justify-center gap-2 w-full p-4 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-700 font-semibold transition-colors group"
-                >
-                    <Mail size={18} className="text-slate-400 group-hover:text-primary transition-colors"/>
-                    ammanfawaz272@gmail.com
-                </a>
+                <div className="flex flex-wrap justify-center gap-6 md:gap-8">
+                  {developers.map((dev, index) => (
+                    <div key={index} className="flex flex-col items-center group">
+                      <h4 className="font-bold text-slate-900 mb-1">{dev.name}</h4>
+                      <a 
+                        href={`mailto:${dev.email}`}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-100 hover:border-primary/30 hover:bg-white hover:text-primary transition-all group/email"
+                      >
+                        <Mail size={10} className="text-slate-400 group-hover/email:text-primary transition-colors" />
+                        <span className="text-xs text-slate-500 group-hover/email:text-primary transition-colors">{dev.email}</span>
+                      </a>
+                    </div>
+                  ))}
+                </div>
              </div>
 
              <button 
@@ -53,7 +64,7 @@ const DeveloperModal = ({ isOpen, onClose }) => {
              </button>
           </motion.div>
         </div>
-      )} */}
+      )}
     </AnimatePresence>
   );
 };

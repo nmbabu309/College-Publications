@@ -21,6 +21,9 @@
 }
 
 @layer base {
+  html {
+    overscroll-behavior-y: none;
+  }
   html, body {
     @apply h-full;
   }
@@ -28,7 +31,7 @@
     @apply min-h-screen flex flex-col;
   }
   body {
-    @apply bg-background text-slate-900 font-sans antialiased;
+    @apply bg-background text-slate-900 font-sans antialiased overflow-x-hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-bold text-slate-900;
