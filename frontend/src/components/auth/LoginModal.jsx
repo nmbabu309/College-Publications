@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { isValidEmailDomain, getEmailDomainError } from '../../config/constants';
+import { isValidEmailDomain, getEmailDomainError, ALLOWED_EMAIL_DOMAINS } from '../../config/constants';
 import api from '../../api/axios';
 
 const LoginModal = ({ isOpen, onClose }) => {
@@ -75,15 +75,25 @@ const LoginModal = ({ isOpen, onClose }) => {
             className="relative w-full max-w-md bg-white border border-white/20 shadow-premium rounded-2xl overflow-hidden z-10"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-[--primary] to-[--secondary] p-6 text-white text-center">
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 p-1 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
-              <h2 className="text-2xl font-bold font-['Outfit']">Faculty Login</h2>
-              <p className="text-black/80 text-sm mt-1">Access restricted to NRIIT faculty</p>
+            <div className="relative overflow-hidden bg-slate-900 p-8 text-white text-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-violet-700 opacity-90" />
+              {/* Decorative circles */}
+              <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+              <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+
+              <div className="relative z-10">
+                <button
+                  onClick={onClose}
+                  className="absolute -top-4 -right-4 p-2 text-white/70 hover:text-white hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg ring-1 ring-white/30">
+                  <Lock size={24} className="text-white" />
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">Faculty Login</h2>
+                <p className="text-indigo-100/80 text-sm mt-1 font-medium">Secure access for NRIIT faculty</p>
+              </div>
             </div>
 
             {/* Body */}
@@ -99,13 +109,13 @@ const LoginModal = ({ isOpen, onClose }) => {
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-[--text-secondary]">Email Address</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[--text-light]" size={20} />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="faculty@nriit.edu.in"
-                        className="w-full pl-10 pr-4 py-3 bg-[--background] border border-[--border] rounded-xl focus:outline-none focus:ring-2 focus:ring-[--primary] focus:border-transparent transition-all"
+                        placeholder={ALLOWED_EMAIL_DOMAINS.length > 0 ? `faculty@${ALLOWED_EMAIL_DOMAINS[0]}` : "Enter your email"}
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-700 placeholder:text-slate-400"
                         required
                         autoFocus
                       />
@@ -115,7 +125,7 @@ const LoginModal = ({ isOpen, onClose }) => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
                   >
 
                     {loading ? <Loader2 className="animate-spin" /> : <>Get OTP <ArrowRight size={18} /></>}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save, Edit, User, Mail, BookOpen, Building2, Users, FileText, Calendar, Hash, Link, Award, TrendingUp, Globe, CheckCircle2, Sparkles, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { isValidEmailDomain, getEmailDomainError } from '../../config/constants';
+import { isValidEmailDomain, getEmailDomainError, ALLOWED_EMAIL_DOMAINS } from '../../config/constants';
 import api from '../../api/axios';
 
 const UploadForm = ({ onSuccess, initialData = null, onClose }) => {
@@ -229,7 +229,7 @@ const UploadForm = ({ onSuccess, initialData = null, onClose }) => {
                 value={formData.email || ''}
                 onChange={handleChange}
                 className={`${inputClass} ${validationErrors.email ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' : ''}`}
-                placeholder="john@nriit.edu.in"
+                placeholder={ALLOWED_EMAIL_DOMAINS.length > 0 ? `john@${ALLOWED_EMAIL_DOMAINS[0]}` : "john@example.com"}
               />
               {validationErrors.email && (
                 <p className="text-xs text-red-600 mt-1 flex items-center gap-1">

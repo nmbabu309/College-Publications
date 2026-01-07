@@ -185,12 +185,12 @@ const PublicationsTable = ({ showActions = false }) => {
       >
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider text-xs border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+            <thead className="bg-slate-50/80 text-slate-800 font-bold uppercase tracking-wider text-xs border-b border-slate-200 sticky top-0 z-10 shadow-sm backdrop-blur-sm">
               <tr>
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className="p-3 align-top bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors group select-none"
+                    className="px-4 py-3 align-top bg-slate-50/50 hover:bg-slate-100 cursor-pointer transition-colors group select-none"
                     style={{ minWidth: col.minWidth }}
                     onClick={() => requestSort(col.key)}
                   >
@@ -212,19 +212,19 @@ const PublicationsTable = ({ showActions = false }) => {
                       <input
                         type="text"
                         placeholder={`Search...`}
-                        className="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary transition-all font-normal normal-case"
+                        className="w-full pl-8 pr-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-normal normal-case shadow-sm placeholder:text-slate-300"
                         value={filters[col.key] || ""}
                         onChange={(e) =>
                           handleFilterChange(col.key, e.target.value)
                         }
                       />
                     </div>
-                    
+
                   </th>
                 ))}
                 {/* Action Column */}
                 {(showActions || isAuthenticated) && (
-                  <th className="p-3 w-24 align-top bg-slate-50 sticky right-0 z-20 shadow-[-5px_0_10px_-5px_rgb(0,0,0,0.05)]">
+                  <th className="px-4 py-3 w-24 align-top bg-slate-50/80 sticky right-0 z-20 shadow-[-5px_0_10px_-5px_rgb(0,0,0,0.05)] backdrop-blur-sm">
                     <div className="mb-2 text-center">Actions</div>
                   </th>
                 )}
@@ -240,50 +240,50 @@ const PublicationsTable = ({ showActions = false }) => {
                     {columns.map((col) => (
                       <td
                         key={`${row.id}-${col.key}`}
-                        className="p-3 text-slate-700"
+                        className="px-4 py-3 text-slate-700"
                       >
-                      {col.isLink ? (
-                        row[col.key] ? (
-                          <a
-                            href={row[col.key]}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:text-indigo-700 font-medium inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors"
-                          >
-                            <FileText size={14} /> View
-                          </a>
+                        {col.isLink ? (
+                          row[col.key] ? (
+                            <a
+                              href={row[col.key]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:text-indigo-700 font-medium inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors"
+                            >
+                              <FileText size={14} /> View
+                            </a>
+                          ) : (
+                            <span className="text-slate-300 ml-2">-</span>
+                          )
                         ) : (
-                          <span className="text-slate-300 ml-2">-</span>
-                        )
-                      ) : (
-                        <div
-                          className="whitespace-normal break-words"
-                          style={{ minWidth: col.minWidth, maxWidth: "300px" }}
-                        >
-                          {row[col.key] || (
-                            <span className="text-slate-300">-</span>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  ))}
+                          <div
+                            className="whitespace-normal break-words"
+                            style={{ minWidth: col.minWidth, maxWidth: "300px" }}
+                          >
+                            {row[col.key] || (
+                              <span className="text-slate-300">-</span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    ))}
                     {(showActions || isAuthenticated) && (
-                      <td className="p-3 text-center sticky right-0 bg-white group-hover:bg-slate-50 shadow-[-5px_0_10px_-5px_rgb(0,0,0,0.05)] border-l border-transparent z-10">
+                      <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-slate-50 shadow-[-5px_0_10px_-5px_rgb(0,0,0,0.05)] border-l border-transparent z-10">
                         <div className="flex items-center justify-center gap-1">
                           {/* Check permissions: Owner OR Admin */}
                           {isAuthenticated &&
-                          (isAdmin || user?.userEmail === row.email) ? (
+                            (isAdmin || user?.userEmail === row.email) ? (
                             <>
                               <button
                                 onClick={() => handleEditClick(row)}
-                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/80 rounded-lg transition-all hover:scale-105 active:scale-95"
                                 title="Edit Entry"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
                                 onClick={() => handleDeleteClick(row)}
-                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50/80 rounded-lg transition-all hover:scale-105 active:scale-95"
                                 title="Delete Entry"
                               >
                                 <Trash2 size={16} />
@@ -315,76 +315,79 @@ const PublicationsTable = ({ showActions = false }) => {
 
         {/* Pagination & Footer */}
         <div className="p-3 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
-            <div className="flex items-center gap-4 text-[10px] sm:text-xs text-slate-500">
-               <div className="flex items-center gap-2">
-                  <span>Rows per page:</span>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => {
-                      setItemsPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    className="bg-white border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-                  >
-                    {[10, 25, 50, 100].map(size => (
-                      <option key={size} value={size}>{size}</option>
-                    ))}
-                  </select>
-               </div>
-               <span>
-                  Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredData.length)} of {filteredData.length} records
-               </span>
+          <div className="flex items-center gap-4 text-[10px] sm:text-xs text-slate-500">
+            <div className="flex items-center gap-2">
+              <span>Rows per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-white border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+              >
+                {[10, 25, 50, 100].map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
             </div>
-            
-            {totalPages > 1 && (
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => paginate(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 text-xs font-medium rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
-                    >
-                        Previous
-                    </button>
-                    
-                    <div className="flex gap-1">
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            // Logic to show pages around current page
-                            let pageNum;
-                            if (totalPages <= 5) {
-                                pageNum = i + 1;
-                            } else if (currentPage <= 3) {
-                                pageNum = i + 1;
-                            } else if (currentPage >= totalPages - 2) {
-                                pageNum = totalPages - 4 + i;
-                            } else {
-                                pageNum = currentPage - 2 + i;
-                            }
+            <span>
+              Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredData.length)} of {filteredData.length} records
+            </span>
+          </div>
 
-                            return (
-                                <button
-                                    key={pageNum}
-                                    onClick={() => paginate(pageNum)}
-                                    className={`w-8 h-8 flex items-center justify-center text-xs font-medium rounded-md border transition-colors ${
-                                        currentPage === pageNum
-                                            ? "bg-primary text-white border-primary"
-                                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                                    }`}
-                                >
-                                    {pageNum}
-                                </button>
-                            );
-                        })}
-                    </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+              >
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
 
+              <div className="flex gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  // Logic to show pages around current page
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
                     <button
-                        onClick={() => paginate(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="px-3 py-1 text-xs font-medium rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
+                      key={pageNum}
+                      onClick={() => paginate(pageNum)}
+                      className={`w-8 h-8 flex items-center justify-center text-xs font-medium rounded-lg border transition-all shadow-sm ${currentPage === pageNum
+                        ? "bg-primary text-white border-primary shadow-primary/25 ring-2 ring-primary/20"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                        }`}
                     >
-                        Next
+                      {pageNum}
                     </button>
-                </div>
-            )}
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+              >
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
 

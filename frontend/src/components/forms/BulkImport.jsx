@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
@@ -12,7 +12,50 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
   const [stats, setStats] = useState({ total: 0, success: 0, failed: 0 });
   const [errors, setErrors] = useState([]);
   const [resultData, setResultData] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Window-level drag detection for external file drags
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleWindowDragEnter = (e) => {
+      if (e.dataTransfer?.types?.includes('Files')) {
+        e.preventDefault();
+        setIsDragging(true);
+      }
+    };
+
+    const handleWindowDragOver = (e) => {
+      if (e.dataTransfer?.types?.includes('Files')) {
+        e.preventDefault();
+      }
+    };
+
+    const handleWindowDragLeave = (e) => {
+      // Only hide if leaving the window entirely
+      if (e.clientX === 0 && e.clientY === 0) {
+        setIsDragging(false);
+      }
+    };
+
+    const handleWindowDrop = (e) => {
+      e.preventDefault();
+      setIsDragging(false);
+    };
+
+    window.addEventListener('dragenter', handleWindowDragEnter);
+    window.addEventListener('dragover', handleWindowDragOver);
+    window.addEventListener('dragleave', handleWindowDragLeave);
+    window.addEventListener('drop', handleWindowDrop);
+
+    return () => {
+      window.removeEventListener('dragenter', handleWindowDragEnter);
+      window.removeEventListener('dragover', handleWindowDragOver);
+      window.removeEventListener('dragleave', handleWindowDragLeave);
+      window.removeEventListener('drop', handleWindowDrop);
+    };
+  }, [isOpen]);
 
   const generateResultExcel = async () => {
     const workbook = new ExcelJS.Workbook();
@@ -91,8 +134,15 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
     saveAs(blob, `import-results-${new Date().getTime()}.xlsx`);
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleFileUpload = async (fileOrEvent) => {
+    // Handle both File objects (from drag-drop) and events (from input)
+    let file;
+    if (fileOrEvent instanceof File) {
+      file = fileOrEvent;
+    } else {
+      file = fileOrEvent.target?.files?.[0];
+    }
+
     if (!file) return;
 
     setLoading(true);
@@ -160,14 +210,14 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
                 throw new Error('Invalid year: must be 1900 or later');
               }
 
-            // Validate pages field (only numbers and hyphens)
-            const pagesField = row['Pages'] || row['pages'] || '';
-            if (pagesField && String(pagesField).trim() !== '') {
-              const pagesStr = String(pagesField).trim();
-              if (!/^[0-9\-]+$/.test(pagesStr)) {
-                throw new Error('Invalid pages format: only numbers and hyphens allowed (e.g., 100-112)');
+              // Validate pages field (only numbers and hyphens)
+              const pagesField = row['Pages'] || row['pages'] || '';
+              if (pagesField && String(pagesField).trim() !== '') {
+                const pagesStr = String(pagesField).trim();
+                if (!/^[0-9\-]+$/.test(pagesStr)) {
+                  throw new Error('Invalid pages format: only numbers and hyphens allowed (e.g., 100-112)');
+                }
               }
-            }
             }
 
             const payload = {
@@ -246,10 +296,49 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
     reader.readAsBinaryString(file);
   };
 
+  const handleModalDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+      handleFileUpload(file);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onDrop={handleModalDrop}>
+          {/* Full-Screen Drag Overlay */}
+          <AnimatePresence>
+            {isDragging && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0 }}
+                className="absolute inset-0 z-50 bg-slate-900/90 flex flex-col items-center justify-center"
+                style={{ willChange: 'opacity' }}
+              >
+                <div className="flex flex-col items-center gap-6">
+                  <div className="p-6 bg-white/10 rounded-3xl border-4 border-dashed border-white/40">
+                    <FileSpreadsheet size={80} className="text-white" strokeWidth={1.5} />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-semibold text-white mb-2">
+                      Drop files here to upload
+                    </p>
+                    <p className="text-sm text-white/70">
+                      Excel files only (.xlsx, .xls)
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -279,7 +368,9 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 relative">
+
+
               <div className="text-center space-y-4">
                 <p className="text-sm text-slate-500">
                   Upload an Excel file (.xlsx) containing multiple publication records. Ensure column names match the standard format.
@@ -296,10 +387,10 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
                 />
                 <label
                   htmlFor="bulk-import-modal-input"
-                  className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 text-indigo-600 font-medium hover:bg-indigo-50 hover:border-indigo-300 w-full cursor-pointer transition-all ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed bg-indigo-50/50 text-indigo-600 font-medium hover:bg-indigo-50 w-full cursor-pointer transition-all ${loading ? 'opacity-50 cursor-not-allowed' : 'border-indigo-200 hover:border-indigo-300'}`}
                 >
                   {!loading && <Upload size={20} />}
-                  {loading ? 'Processing...' : 'Click to Upload Excel File'}
+                  {loading ? 'Processing...' : 'Click to Upload or Drag & Drop Excel File'}
                 </label>
               </div>
 

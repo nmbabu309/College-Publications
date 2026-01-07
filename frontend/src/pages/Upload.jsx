@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, Upload as UploadIcon, FileSpreadsheet } from "lucide-react";
+import { Download, Upload as UploadIcon, FileSpreadsheet, ChevronLeft } from "lucide-react";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import UploadForm from "../components/forms/UploadForm";
@@ -49,6 +49,17 @@ const Upload = () => {
       <Header />
 
       <main className="flex-grow container mx-auto px-4 py-6 md:py-8 space-y-8">
+        {/* Back to Home Button */}
+        <div>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-lg font-medium transition-colors border border-slate-200 shadow-sm"
+          >
+            <ChevronLeft size={18} />
+            Back to Home
+          </button>
+        </div>
+
         {/* Top Section: Form and Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Upload Form */}

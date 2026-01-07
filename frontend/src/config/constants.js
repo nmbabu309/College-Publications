@@ -1,23 +1,47 @@
 // Email Domain Configuration
-// Set this to your allowed email domain (e.g., '@nriit.edu.in')
-// Leave empty ('') to allow all email domains
-export const ALLOWED_EMAIL_DOMAIN = '@nriit.edu.in';
+// Load allowed domains from environment variable
+// Supports multiple domains (comma-separated): e.g., "amman.ac.in,nriit.edu.in"
+// Leave empty to allow all email domains
+const ALLOWED_EMAIL_DOMAINS_ENV = import.meta.env.VITE_ALLOWED_EMAIL_DOMAINS || '';
 
 /**
- * Validates if an email matches the allowed domain
+ * Get array of allowed domains from environment variable
+ * @returns {string[]} - Array of allowed domains (without @ prefix)
+ */
+const getAllowedDomains = () => {
+    if (!ALLOWED_EMAIL_DOMAINS_ENV || ALLOWED_EMAIL_DOMAINS_ENV.trim() === '') {
+        return [];
+    }
+
+    return ALLOWED_EMAIL_DOMAINS_ENV
+        .split(',')
+        .map(domain => domain.trim().toLowerCase())
+        .filter(domain => domain.length > 0);
+};
+
+/**
+ * Validates if an email matches any of the allowed domains
  * @param {string} email - Email address to validate
  * @returns {boolean} - True if valid, false otherwise
  */
 export const isValidEmailDomain = (email) => {
     if (!email) return false;
 
+    const allowedDomains = getAllowedDomains();
+
     // If no domain restriction, allow all emails
-    if (!ALLOWED_EMAIL_DOMAIN || ALLOWED_EMAIL_DOMAIN.trim() === '') {
+    if (allowedDomains.length === 0) {
         return true;
     }
 
-    // Check if email ends with the allowed domain
-    return email.toLowerCase().endsWith(ALLOWED_EMAIL_DOMAIN.toLowerCase());
+    // Extract domain from email (everything after @)
+    const emailParts = email.toLowerCase().split('@');
+    if (emailParts.length !== 2) return false;
+
+    const emailDomain = emailParts[1];
+
+    // Check if email domain matches any allowed domain
+    return allowedDomains.some(allowedDomain => emailDomain === allowedDomain);
 };
 
 /**
@@ -25,8 +49,8 @@ export const isValidEmailDomain = (email) => {
  * @returns {string} - Error message
  */
 export const getEmailDomainError = () => {
-    if (!ALLOWED_EMAIL_DOMAIN || ALLOWED_EMAIL_DOMAIN.trim() === '') {
-        return 'Invalid email address';
-    }
-    return `Only ${ALLOWED_EMAIL_DOMAIN} emails are allowed`;
+    return 'Please use your college email';
 };
+
+// Export for use in other components (optional)
+export const ALLOWED_EMAIL_DOMAINS = getAllowedDomains();
