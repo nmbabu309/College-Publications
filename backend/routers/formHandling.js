@@ -335,7 +335,7 @@ router.get("/downloadExcel", async (req, res) => {
     const worksheet = workbook.addWorksheet("Publications");
 
     // 1. Add Title Row
-    worksheet.mergeCells("A1:S1");
+    worksheet.mergeCells("A1:T1");
     const titleRow = worksheet.getRow(1);
     titleRow.getCell(1).value = "FACULTY PAPER PUBLICATIONS";
     titleRow.getCell(1).font = {
@@ -364,11 +364,11 @@ router.get("/downloadExcel", async (req, res) => {
       { header: "Issue No", key: "issueNo", width: 10 },
       { header: "Pages", key: "pages", width: 15 },
       { header: "Indexation", key: "indexation", width: 20 },
-      { header: "ISSN No", key: "issnNo", width: 20 },
+      { header: "ISSN/ISBN No", key: "issnNo", width: 20 },
       { header: "Journal Link", key: "journalLink", width: 30 },
       { header: "UGC Approved", key: "ugcApproved", width: 15 },
       { header: "Impact Factor", key: "impactFactor", width: 15 },
-      { header: "PDF URL", key: "pdfUrl", width: 40 },
+      { header: "DOI Link", key: "pdfUrl", width: 40 },
     ];
 
     // Set widths
@@ -443,7 +443,7 @@ router.get("/downloadTemplate", async (req, res) => {
     const worksheet = workbook.addWorksheet("Publications");
 
     // 1. Add Title Row
-    worksheet.mergeCells("A1:S1");
+    worksheet.mergeCells("A1:T1");
     const titleRow = worksheet.getRow(1);
     titleRow.getCell(1).value = "FACULTY PAPER PUBLICATIONS";
     titleRow.getCell(1).font = {
@@ -472,11 +472,11 @@ router.get("/downloadTemplate", async (req, res) => {
       { header: "Issue No", width: 10 },
       { header: "Pages", width: 15 },
       { header: "Indexation", width: 20 },
-      { header: "ISSN No", width: 20 },
+      { header: "ISSN/ISBN No", width: 20 },
       { header: "Journal Link", width: 30 },
       { header: "UGC Approved", width: 15 },
       { header: "Impact Factor", width: 15 },
-      { header: "PDF URL", width: 40 },
+      { header: "DOI Link", width: 40 },
     ];
 
     // Set widths

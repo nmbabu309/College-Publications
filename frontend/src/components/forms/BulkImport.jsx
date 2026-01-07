@@ -64,9 +64,9 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
     // Define headers
     const headers = [
       'Row #', 'Status', 'Error Message', 'Publication Type', 'Main Author', 'Title', 'Email', 'Phone',
-      'Dept', 'Co-Authors', 'Journal', 'Publisher', 'Year', 'Volume', 'Issue No',
-      'Pages', 'Indexation', 'ISSN No', 'Journal Link', 'UGC Approved',
-      'Impact Factor', 'PDF URL'
+      'Dept', 'Coauthors', 'Journal', 'Publisher', 'Year', 'Volume', 'Issue No',
+      'Pages', 'Indexation', 'ISSN/ISBN No', 'Journal Link', 'UGC Approved',
+      'Impact Factor', 'DOI Link'
     ];
 
     // Add header row with styling
@@ -91,7 +91,7 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
         result.data['Email'] || result.data['email'] || '',
         result.data['Phone'] || result.data['phone'] || '',
         result.data['Dept'] || result.data['dept'] || '',
-        result.data['Co-Authors'] || result.data['Coauthors'] || result.data['coauthors'] || '',
+        result.data['Coauthors'] || result.data['Co-Authors'] || result.data['coauthors'] || '',
         result.data['Journal'] || result.data['journal'] || '',
         result.data['Publisher'] || result.data['publisher'] || '',
         result.data['Year'] || result.data['year'] || '',
@@ -99,11 +99,11 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
         result.data['Issue No'] || result.data['issueNo'] || '',
         result.data['Pages'] || result.data['pages'] || '',
         result.data['Indexation'] || result.data['indexation'] || '',
-        result.data['ISSN No'] || result.data['issnNo'] || '',
+        result.data['ISSN/ISBN No'] || result.data['ISSN No'] || result.data['issnNo'] || '',
         result.data['Journal Link'] || result.data['journalLink'] || '',
         result.data['UGC Approved'] || result.data['ugcApproved'] || '',
         result.data['Impact Factor'] || result.data['impactFactor'] || '',
-        result.data['PDF URL'] || result.data['pdfUrl'] || ''
+        result.data['DOI Link'] || result.data['PDF URL'] || result.data['pdfUrl'] || ''
       ]);
 
       // Color code the row
@@ -228,7 +228,7 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
               email: email,
               phone: phone,
               dept: row['Dept'] || row['dept'] || '',
-              coauthors: row['Co-Authors'] || row['Coauthors'] || row['coauthors'] || '',
+              coauthors: row['Coauthors'] || row['Co-Authors'] || row['coauthors'] || '',
               journal: row['Journal'] || row['journal'] || '',
               publisher: row['Publisher'] || row['publisher'] || '',
               year: year,
@@ -236,11 +236,11 @@ const BulkImport = ({ isOpen, onClose, onSuccess }) => {
               issueNo: row['Issue No'] || row['issueNo'] || '',
               pages: row['Pages'] || row['pages'] || '',
               indexation: row['Indexation'] || row['indexation'] || '',
-              issnNo: row['ISSN No'] || row['issnNo'] || '',
+              issnNo: row['ISSN/ISBN No'] || row['ISSN No'] || row['issnNo'] || '',
               journalLink: row['Journal Link'] || row['journalLink'] || '',
               ugcApproved: row['UGC Approved'] || row['ugcApproved'] || '',
               impactFactor: row['Impact Factor'] || row['impactFactor'] || '',
-              pdfUrl: row['PDF URL'] || row['pdfUrl'] || ''
+              pdfUrl: row['DOI Link'] || row['PDF URL'] || row['pdfUrl'] || ''
             };
 
             // Email domain validation

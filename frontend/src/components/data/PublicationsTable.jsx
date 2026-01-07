@@ -112,11 +112,11 @@ const PublicationsTable = ({ showActions = false }) => {
     { key: "issueNo", label: "Issue", minWidth: "60px" },
     { key: "pages", label: "Pages", minWidth: "100px" },
     { key: "indexation", label: "Index", minWidth: "120px" },
-    { key: "issnNo", label: "ISSN", minWidth: "100px" },
+    { key: "issnNo", label: "ISSN/ISBN", minWidth: "120px" },
     { key: "journalLink", label: "Journal Link", isLink: true, minWidth: "120px" },
     { key: "ugcApproved", label: "UGC", minWidth: "80px" },
     { key: "impactFactor", label: "Impact", minWidth: "80px" },
-    { key: "pdfUrl", label: "PDF", isLink: true, minWidth: "80px" },
+    { key: "pdfUrl", label: "DOI Link", isLink: true, minWidth: "100px" },
   ];
 
   const handleFilterChange = (key, value) => {

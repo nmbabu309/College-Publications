@@ -491,7 +491,7 @@ const UploadForm = ({ onSuccess, initialData = null, onClose }) => {
             <div>
               <label className={labelClass}>
                 <Hash size={16} className="text-purple-500" />
-                ISSN No
+                ISSN/ISBN No
               </label>
               <input
                 name="issnNo"
@@ -546,7 +546,7 @@ const UploadForm = ({ onSuccess, initialData = null, onClose }) => {
           <div>
             <label className={labelClass}>
               <Link size={16} className="text-purple-500" />
-              Link to Article (DOI)
+              DOI Link
             </label>
             <input
               type="url"
