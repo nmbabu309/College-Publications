@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'; // Added useRef
+import { useState, useEffect, useRef, useCallback } from 'react'; // Added useCallback
 import { Save, Edit, User, Mail, BookOpen, Building2, Users, FileText, Calendar, Hash, Link, Award, TrendingUp, Globe, CheckCircle2, Sparkles, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isValidEmailDomain, getEmailDomainError, ALLOWED_EMAIL_DOMAINS } from '../../config/constants';
@@ -21,7 +21,7 @@ const UploadForm = ({ onSuccess, initialData = null, onClose, hideSuccessPopup =
     coauthors: '',
     journal: '',
     publisher: '',
-    year: '2005',
+    year: '',
     vol: '',
     issueNo: '',
     pages: '',
@@ -116,28 +116,125 @@ const UploadForm = ({ onSuccess, initialData = null, onClose, hideSuccessPopup =
   };
 
   useEffect(() => {
-    const searchTermAuthor = formData.mainAuthor?.toLowerCase() || "";
-    const searchTermEmail = formData.email?.toLowerCase() || "";
-    const searchTermDept = formData.dept?.toLowerCase() || "";
-    const searchTermPhone = formData.phone?.toString() || "";
+    // Normalizing inputs
+    const sAuthor = formData.mainAuthor?.toLowerCase() || "";
+    const sEmail = formData.email?.toLowerCase() || "";
+    const sDept = formData.dept?.toLowerCase() || "";
+    const sPhone = formData.phone?.toString() || "";
+    const sTitle = formData.title?.toLowerCase() || "";
+    const sJournal = formData.journal?.toLowerCase() || "";
+    const sPublisher = formData.publisher?.toLowerCase() || "";
+    const sYear = formData.year?.toString() || "";
+    const sType = formData.publicationType?.toLowerCase() || "";
 
-    if (searchTermAuthor.length > 2 || searchTermEmail.length > 2 || searchTermDept.length > 1 || searchTermPhone.length > 4) {
+    // Thresholds: Only filter if user typed enough chars
+    const hasAuthor = sAuthor.length > 2;
+    const hasEmail = sEmail.length > 2;
+    const hasDept = sDept.length > 1;
+    const hasPhone = sPhone.length > 4;
+    const hasTitle = sTitle.length > 2; // lowered threshold for Title
+    const hasJournal = sJournal.length > 2;
+    const hasPublisher = sPublisher.length > 2;
+    const hasYear = sYear.length === 4;
+    const hasType = sType.length > 2;
+
+    const hasAnyInput = hasAuthor || hasEmail || hasDept || hasPhone || hasTitle || hasJournal || hasPublisher || hasYear || hasType;
+
+    if (hasAnyInput) {
       const matches = allPublications.filter(pub => {
-        const authorMatch = searchTermAuthor.length > 2 && (
-          pub.mainAuthor?.toLowerCase().includes(searchTermAuthor) ||
-          pub.coauthors?.toLowerCase().includes(searchTermAuthor)
-        );
-        const emailMatch = searchTermEmail.length > 2 && pub.email?.toLowerCase().includes(searchTermEmail);
-        const deptMatch = searchTermDept.length > 1 && pub.dept?.toLowerCase() === searchTermDept;
-        const phoneMatch = searchTermPhone.length > 4 && pub.phone?.toString().includes(searchTermPhone);
+        // AND Logic: Start True, fail if any ACTIVE filter doesn't match
+        let isMatch = true;
 
-        return authorMatch || emailMatch || deptMatch || phoneMatch;
+        if (hasAuthor) {
+          const authorInMain = pub.mainAuthor?.toLowerCase().includes(sAuthor);
+          const authorInCo = pub.coauthors?.toLowerCase().includes(sAuthor);
+          if (!authorInMain && !authorInCo) isMatch = false;
+        }
+        if (isMatch && hasEmail) {
+          if (!pub.email?.toLowerCase().includes(sEmail)) isMatch = false;
+        }
+        if (isMatch && hasDept) {
+          if (pub.dept?.toLowerCase() !== sDept) isMatch = false;
+        }
+        if (isMatch && hasPhone) {
+          if (!pub.phone?.toString().includes(sPhone)) isMatch = false;
+        }
+        if (isMatch && hasTitle) {
+          if (!pub.title?.toLowerCase().includes(sTitle)) isMatch = false;
+        }
+        if (isMatch && hasJournal) {
+          if (!pub.journal?.toLowerCase().includes(sJournal)) isMatch = false;
+        }
+        if (isMatch && hasPublisher) {
+          if (!pub.publisher?.toLowerCase().includes(sPublisher)) isMatch = false;
+        }
+        if (isMatch && hasYear) {
+          if (pub.year?.toString() !== sYear) isMatch = false;
+        }
+        if (isMatch && hasType) {
+          if (pub.publicationType?.toLowerCase() !== sType) isMatch = false;
+        }
+
+        return isMatch;
       });
       setMatchingPublications(matches);
     } else {
       setMatchingPublications([]);
     }
-  }, [formData.mainAuthor, formData.email, formData.dept, formData.phone, allPublications]);
+  }, [formData, allPublications]);
+
+  // Resizable Sidebar Logic
+  const [sidebarWidth, setSidebarWidth] = useState(150);
+  const [sidebarHeight, setSidebarHeight] = useState(150);
+  const [resizeDir, setResizeDir] = useState(null); // 'x', 'y', 'xy'
+  const sidebarRef = useRef(null);
+
+  const startResizing = useCallback((direction, e) => {
+    e.preventDefault();
+    setResizeDir(direction);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setResizeDir(null);
+  }, []);
+
+  const resize = useCallback((e) => {
+    if (!resizeDir) return;
+
+    if (resizeDir === 'x' || resizeDir === 'xy') {
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth > 150 && newWidth < window.innerWidth * 0.95) {
+        setSidebarWidth(newWidth);
+      }
+    }
+
+    if (resizeDir === 'y' || resizeDir === 'xy') {
+      // Top position is top-24 which is 96px (24 * 4)
+      const topOffset = 96;
+      const newHeight = e.clientY - topOffset;
+      // Lowered min-height to 150
+      if (newHeight > 150 && newHeight < window.innerHeight - 20) {
+        setSidebarHeight(newHeight);
+      }
+    }
+  }, [resizeDir]);
+
+  useEffect(() => {
+    if (resizeDir) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+    } else {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [resizeDir, resize, stopResizing]);
+
+  // Re-calculate default width on window resize if not manually resized? 
+  // keeping it simple: explicitly set default once.
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -359,66 +456,150 @@ const UploadForm = ({ onSuccess, initialData = null, onClose, hideSuccessPopup =
         </div>
       </div>
 
-      {/* Live Matching Publications Popup (Right Side) */}
+      {/* Live Matching Publications Popup (Right Side / Bottom Sheet) */}
       <AnimatePresence>
         {matchingPublications.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-24 right-4 z-50 w-[600px] max-h-[80vh] flex flex-col shadow-2xl rounded-2xl border border-slate-200 bg-white overflow-hidden glass-card"
+            // Dynamic width styles
+            style={{
+              width: window.innerWidth >= 768 ? sidebarWidth : '100%',
+              maxWidth: window.innerWidth >= 768 ? '95vw' : '100%'
+            }}
+            className="fixed z-50 flex flex-col shadow-2xl border border-slate-200 bg-white overflow-hidden glass-card
+              top-auto bottom-0 left-0 right-0 h-[80vh] rounded-t-2xl 
+              md:top-24 md:bottom-auto md:left-auto md:right-0 md:rounded-l-2xl md:rounded-tr-none md:border-r-0"
+          // Removed fixed widths, managed by style above
           >
-            <div className="p-4 bg-slate-50/80 backdrop-blur-sm border-b border-slate-200 flex items-center justify-between sticky top-0 z-20">
+            {/* Left Handle (Width) - IMPROVED HIT AREA */}
+            <div
+              onMouseDown={(e) => startResizing('x', e)}
+              className="hidden md:flex absolute left-0 top-0 bottom-0 w-5 cursor-col-resize hover:bg-slate-500/5 items-center justify-center group z-[60] transition-colors"
+            >
+              {/* Visual Indicator of handle */}
+              <div className="h-10 w-1 rounded-full bg-slate-300 group-hover:bg-indigo-500 transition-colors shadow-sm" />
+            </div>
+
+            {/* Bottom Handle (Height) - IMPROVED HIT AREA */}
+            <div
+              onMouseDown={(e) => startResizing('y', e)}
+              className="hidden md:flex absolute bottom-0 left-0 right-0 h-5 cursor-row-resize hover:bg-slate-500/5 items-center justify-center group z-[60] transition-colors"
+            >
+              {/* Visual Indicator of handle */}
+              <div className="w-10 h-1 rounded-full bg-slate-300 group-hover:bg-indigo-500 transition-colors shadow-sm" />
+            </div>
+
+            {/* Bottom-Left Corner Handle (Both) - IMPROVED HIT AREA */}
+            <div
+              onMouseDown={(e) => startResizing('xy', e)}
+              className="hidden md:flex absolute bottom-0 left-0 w-8 h-8 cursor-sw-resize hover:bg-indigo-50 items-end justify-start z-[70] transition-colors rounded-tr-xl p-1.5"
+            >
+              {/* Visual Corner Indicator */}
+              <div className="relative w-full h-full">
+                <div className="absolute bottom-1 left-1 w-1.5 h-1.5 bg-slate-300 group-hover:bg-indigo-500 rounded-full" />
+                <div className="absolute bottom-1 left-3.5 w-1.5 h-1.5 bg-slate-300 group-hover:bg-indigo-500 rounded-full" />
+                <div className="absolute bottom-3.5 left-1 w-1.5 h-1.5 bg-slate-300 group-hover:bg-indigo-500 rounded-full" />
+              </div>
+            </div>
+
+            <div className="p-4 pl-6 bg-slate-50/90 backdrop-blur-sm border-b border-slate-200 flex items-center justify-between sticky top-0 z-20 shrink-0">
+
               <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
                 <Sparkles size={16} className="text-indigo-500" />
                 Found {matchingPublications.length} possible duplicates
               </h4>
               <button
                 onClick={() => setMatchingPublications([])}
-                className="p-1 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
+                className="p-1.5 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
+                title="Close"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
             <div className="overflow-auto flex-1 custom-scrollbar p-0 bg-white">
-              <table className="w-full text-xs text-left">
+              {/* Added ALL fields from PublicationsTable */}
+              <table className="w-full text-xs text-left min-w-[1600px]">
                 <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Title</th>
-                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Authors</th>
-                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Journal/Conf</th>
-                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Details</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">S.No</th>
                     <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Type</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Title</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Main Author</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Co-Authors</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Dept</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Email</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Phone</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Journal</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Publisher</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Year</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Vol</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Issue</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Pages</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">ISSN/ISBN</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Indexation</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">UGC</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Impact Factor</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Link (Journal)</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">DOI Link</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {matchingPublications.map((pub) => (
-                    <tr key={pub.id} className="hover:bg-indigo-50/30 transition-colors">
-                      <td className="px-4 py-3 font-medium text-slate-800 align-top min-w-[200px]">
-                        {pub.title}
-                        <div className="text-[10px] text-indigo-500 font-normal mt-0.5">{pub.doi || pub.pdfUrl ? 'Has DOI/Link' : ''}</div>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 align-top max-w-[150px]">
-                        <div className="font-medium text-slate-900">{pub.mainAuthor}</div>
-                        <div className="text-[10px] text-slate-500 leading-tight mt-1">{pub.coauthors}</div>
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 align-top max-w-[150px]">
-                        {pub.journal || pub.publisher || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 align-top whitespace-nowrap">
-                        <div><span className="text-slate-400">Yr:</span> {pub.year}</div>
-                        <div><span className="text-slate-400">Vol:</span> {pub.vol || '-'}</div>
-                        <div><span className="text-slate-400">Iss:</span> {pub.issueNo || '-'}</div>
-                      </td>
-                      <td className="px-4 py-3 align-top whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-[10px] font-medium border ${pub.publicationType === 'Journal Paper'
+                  {matchingPublications.map((pub, index) => (
+                    <tr key={pub.id} className="hover:bg-indigo-50/40 transition-colors">
+                      <td className="px-4 py-3 font-medium text-slate-500">{index + 1}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${pub.publicationType === 'Journal Paper'
                           ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
                           : 'bg-purple-50 text-purple-700 border-purple-100'
                           }`}>
                           {pub.publicationType}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 font-medium text-slate-800 min-w-[200px]" title={pub.title}>{pub.title}</td>
+                      <td className="px-4 py-3 text-slate-700 font-medium whitespace-nowrap">{pub.mainAuthor}</td>
+                      <td className="px-4 py-3 text-slate-500 whitespace-nowrap max-w-[150px] truncate" title={pub.coauthors}>{pub.coauthors || '-'}</td>
+                      <td className="px-4 py-3 text-slate-600 font-medium">{pub.dept}</td>
+                      <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{pub.email || '-'}</td>
+                      <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{pub.phone || '-'}</td>
+                      <td className="px-4 py-3 text-slate-600 min-w-[120px]">{pub.journal || '-'}</td>
+                      <td className="px-4 py-3 text-slate-600 min-w-[100px]">{pub.publisher || '-'}</td>
+                      <td className="px-4 py-3 text-slate-600">{pub.year}</td>
+                      <td className="px-4 py-3 text-slate-500">{pub.vol || '-'}</td>
+                      <td className="px-4 py-3 text-slate-500">{pub.issueNo || '-'}</td>
+                      <td className="px-4 py-3 text-slate-500">{pub.pages || '-'}</td>
+                      <td className="px-4 py-3 text-slate-500">{pub.issnNo || '-'}</td>
+                      <td className="px-4 py-3">
+                        {pub.indexation ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            {pub.indexation}
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {pub.ugcApproved === 'Yes' ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-amber-50 text-amber-700 border border-amber-100">
+                            Yes
+                          </span>
+                        ) : 'No'}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">{pub.impactFactor || '-'}</td>
+                      <td className="px-4 py-3">
+                        {pub.journalLink ? (
+                          <a href={pub.journalLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                            <Globe size={12} /> Link
+                          </a>
+                        ) : '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {(pub.doi || pub.pdfUrl) ? (
+                          <a href={pub.doi || pub.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline flex items-center gap-1">
+                            <Link size={12} /> DOI
+                          </a>
+                        ) : '-'}
                       </td>
                     </tr>
                   ))}
@@ -514,7 +695,7 @@ const UploadForm = ({ onSuccess, initialData = null, onClose, hideSuccessPopup =
                 value={formData.year || ''}
                 onChange={handleChange}
                 className={`${inputClass} ${validationErrors.year ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' : ''} `}
-                placeholder="2024"
+                placeholder={new Date().getFullYear()}
               />
               {validationErrors.year && (
                 <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
