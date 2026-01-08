@@ -99,7 +99,45 @@ const UploadForm = ({ onSuccess, initialData = null, onClose, hideSuccessPopup =
         setShowOtherIndexation(true);
       }
     }
+    // Fetch all publications for live search
+    fetchPublications();
   }, [initialData]);
+
+  const [allPublications, setAllPublications] = useState([]);
+  const [matchingPublications, setMatchingPublications] = useState([]);
+
+  const fetchPublications = async () => {
+    try {
+      const response = await api.get("/form/formGet");
+      setAllPublications(response.data);
+    } catch (err) {
+      console.error("Failed to load publications for suggestion", err);
+    }
+  };
+
+  useEffect(() => {
+    const searchTermAuthor = formData.mainAuthor?.toLowerCase() || "";
+    const searchTermEmail = formData.email?.toLowerCase() || "";
+    const searchTermDept = formData.dept?.toLowerCase() || "";
+    const searchTermPhone = formData.phone?.toString() || "";
+
+    if (searchTermAuthor.length > 2 || searchTermEmail.length > 2 || searchTermDept.length > 1 || searchTermPhone.length > 4) {
+      const matches = allPublications.filter(pub => {
+        const authorMatch = searchTermAuthor.length > 2 && (
+          pub.mainAuthor?.toLowerCase().includes(searchTermAuthor) ||
+          pub.coauthors?.toLowerCase().includes(searchTermAuthor)
+        );
+        const emailMatch = searchTermEmail.length > 2 && pub.email?.toLowerCase().includes(searchTermEmail);
+        const deptMatch = searchTermDept.length > 1 && pub.dept?.toLowerCase() === searchTermDept;
+        const phoneMatch = searchTermPhone.length > 4 && pub.phone?.toString().includes(searchTermPhone);
+
+        return authorMatch || emailMatch || deptMatch || phoneMatch;
+      });
+      setMatchingPublications(matches);
+    } else {
+      setMatchingPublications([]);
+    }
+  }, [formData.mainAuthor, formData.email, formData.dept, formData.phone, allPublications]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -320,6 +358,76 @@ const UploadForm = ({ onSuccess, initialData = null, onClose, hideSuccessPopup =
           </div>
         </div>
       </div>
+
+      {/* Live Matching Publications Popup (Right Side) */}
+      <AnimatePresence>
+        {matchingPublications.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed top-24 right-4 z-50 w-[600px] max-h-[80vh] flex flex-col shadow-2xl rounded-2xl border border-slate-200 bg-white overflow-hidden glass-card"
+          >
+            <div className="p-4 bg-slate-50/80 backdrop-blur-sm border-b border-slate-200 flex items-center justify-between sticky top-0 z-20">
+              <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <Sparkles size={16} className="text-indigo-500" />
+                Found {matchingPublications.length} possible duplicates
+              </h4>
+              <button
+                onClick={() => setMatchingPublications([])}
+                className="p-1 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="overflow-auto flex-1 custom-scrollbar p-0 bg-white">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Title</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Authors</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Journal/Conf</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Details</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Type</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {matchingPublications.map((pub) => (
+                    <tr key={pub.id} className="hover:bg-indigo-50/30 transition-colors">
+                      <td className="px-4 py-3 font-medium text-slate-800 align-top min-w-[200px]">
+                        {pub.title}
+                        <div className="text-[10px] text-indigo-500 font-normal mt-0.5">{pub.doi || pub.pdfUrl ? 'Has DOI/Link' : ''}</div>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600 align-top max-w-[150px]">
+                        <div className="font-medium text-slate-900">{pub.mainAuthor}</div>
+                        <div className="text-[10px] text-slate-500 leading-tight mt-1">{pub.coauthors}</div>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 align-top max-w-[150px]">
+                        {pub.journal || pub.publisher || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 align-top whitespace-nowrap">
+                        <div><span className="text-slate-400">Yr:</span> {pub.year}</div>
+                        <div><span className="text-slate-400">Vol:</span> {pub.vol || '-'}</div>
+                        <div><span className="text-slate-400">Iss:</span> {pub.issueNo || '-'}</div>
+                      </td>
+                      <td className="px-4 py-3 align-top whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-medium border ${pub.publicationType === 'Journal Paper'
+                          ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                          : 'bg-purple-50 text-purple-700 border-purple-100'
+                          }`}>
+                          {pub.publicationType}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Publication Details Section */}
       <div className={sectionClass}>
@@ -598,7 +706,7 @@ const UploadForm = ({ onSuccess, initialData = null, onClose, hideSuccessPopup =
                   <CheckCircle2 size={28} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-bold text-lg mb-1">Success!</h4>
+                  <h4 className="font-bold text-lg mb-1 text-white">Success!</h4>
                   <p className="text-white/90 text-sm">
                     {initialData ? 'Publication updated successfully!' : 'Publication added successfully!'}
                   </p>
