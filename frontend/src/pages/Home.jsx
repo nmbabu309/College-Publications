@@ -36,17 +36,20 @@ const Home = () => {
           </div>
 
           <div className="relative z-10 max-w-4xl mx-auto space-y-8">
-            <motion.div
+            <motion.a
+              href="https://www.nriit.edu.in"
+              target="_blank"
+              rel="noopener noreferrer"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/60 backdrop-blur-md border border-slate-700 text-indigo-300 text-xs md:text-sm font-semibold shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/60 backdrop-blur-md border border-slate-700 text-indigo-300 text-xs md:text-sm font-semibold shadow-sm hover:bg-slate-800/80 transition-colors cursor-pointer"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
               </span>
               NRI Institute of Technology
-            </motion.div>
+            </motion.a>
 
             <motion.h1
               initial={{ opacity: 0, scale: 0.95 }}

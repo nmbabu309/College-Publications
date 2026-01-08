@@ -34,13 +34,12 @@ const LoginModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault();
+  const verifyOtp = async (otpValue) => {
     setError('');
     setLoading(true);
 
     try {
-      const response = await api.post('/login/otpVerify', { email, otp });
+      const response = await api.post('/login/otpVerify', { email, otp: otpValue });
       login(response.data.token);
       onClose();
       // Reset state after successful login
@@ -55,6 +54,22 @@ const LoginModal = ({ isOpen, onClose }) => {
       setLoading(false);
     }
   };
+
+  const handleOtpChange = (e) => {
+    const value = e.target.value;
+    setOtp(value);
+
+    // Auto-verify if 6 digits
+    if (value.length === 6) {
+      verifyOtp(value);
+    }
+  };
+
+  const handleOtpSubmit = (e) => {
+    e.preventDefault();
+    verifyOtp(otp);
+  };
+
 
   return (
     <AnimatePresence>
@@ -155,7 +170,7 @@ const LoginModal = ({ isOpen, onClose }) => {
                       <input
                         type="text"
                         value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
+                        onChange={handleOtpChange}
                         placeholder="Enter OTP"
                         className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all tracking-widest text-lg"
                         required
